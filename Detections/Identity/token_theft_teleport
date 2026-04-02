@@ -1,0 +1,20 @@
+title: Potential Session Token Theft - Identity Teleportation
+id: 5f9a-2026-identity-01
+status: experimental
+description: Detects a session token being used from a geographic location or IP address that is significantly different from the initial login, indicating potential token theft (AiTM).
+author: Shubham Waghilkar
+date: 2026/04/02
+logsource:
+    product: m365
+    service: signinlogs
+detection:
+    selection:
+        Status: 'Success'
+    condition: selection | geographic_deviation(30m, 500km)
+falsepositives:
+    - Users on Corporate VPNs
+    - Travel (though 30m is usually too fast for physical travel)
+level: high
+tags:
+    - attack.initial_access
+    - attack.t1550.004
