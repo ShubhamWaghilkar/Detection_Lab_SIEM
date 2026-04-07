@@ -1,0 +1,25 @@
+rule trendmicro_infostealer_to_cloudflare_api_spike {
+  meta:
+    description = "Trend Micro detects infostealer/token theft followed by Cloudflare API abuse"
+    severity = "Critical"
+    author = "Shubham"
+
+  events:
+    // Event A: Trend Micro detects an Infostealer or Credential Access tool
+    $xdr.metadata.vendor_name = "Trend Micro"
+    $xdr.metadata.event_type = "PROCESS_LAUNCH"
+    $xdr.target.process.file.full_path = /mimikatz|laZagne|infostealer/ nocase
+    $xdr.principal.user.userid = $user_id
+
+    // Event B: Cloudflare sees a spike in API calls using that user's credentials
+    $waf.metadata.vendor_name = "Cloudflare"
+    $waf.metadata.product_name = "Cloudflare API Gateway"
+    $waf.target.user.userid = $user_id
+    $waf.target.url = /api/ nocase
+
+  match:
+    $user_id over 4h
+
+  condition:
+    $waf and $xdr
+}
